@@ -1329,10 +1329,8 @@ const Dashboard = ({ admin, onLogout }) => {
       setCheckoutBill(mockBill);
       setShowCheckOutModal(false);
       
-      alert(`✅ Check-out thành công!
-🏠 Phòng: ${selectedRoom.number}
-💰 Tổng tiền: ${currentCost.total_cost?.toLocaleString()} VND
-⏰ Thời gian lưu trú: ${currentCost.duration_hours} giờ`);
+      // Show checkout alert with bill details
+      alert("✅ Check-out thành công!\n🏠 Phòng: " + selectedRoom.number + "\n💰 Tổng tiền: " + currentCost.total_cost?.toLocaleString() + " VND\n⏰ Thời gian lưu trú: " + currentCost.duration_hours + " giờ");
       
     } catch (error) {
       alert("Lỗi khi check-out: " + error.message);
@@ -2275,10 +2273,19 @@ const Dashboard = ({ admin, onLogout }) => {
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Check-out thành công!</h3>
               <div className="bg-gray-50 p-4 rounded-lg mb-4 text-left">
-                <p className="text-sm text-gray-600">{checkoutBill.details}</p>
-                <p className="text-xl font-bold text-green-600 mt-2">
-                  Tổng tiền: {checkoutBill.total_cost?.toLocaleString()} VND
-                </p>
+                <div className="space-y-2">
+                  <p><strong>Phòng:</strong> {checkoutBill.room_number}</p>
+                  <p><strong>Khách:</strong> {checkoutBill.guest_name}</p>
+                  <p><strong>Check-in:</strong> {new Date(checkoutBill.check_in_time).toLocaleString('vi-VN')}</p>
+                  <p><strong>Check-out:</strong> {new Date(checkoutBill.check_out_time).toLocaleString('vi-VN')}</p>
+                  <p><strong>Thời gian:</strong> {checkoutBill.cost_calculation?.duration_hours} giờ ({checkoutBill.cost_calculation?.duration_days} ngày)</p>
+                  <p><strong>Loại đặt:</strong> {checkoutBill.cost_calculation?.details}</p>
+                </div>
+                <div className="border-t border-gray-200 mt-3 pt-3">
+                  <p className="text-2xl font-bold text-green-600">
+                    💰 Tổng tiền: {checkoutBill.cost_calculation?.total_cost?.toLocaleString() || 0} VND
+                  </p>
+                </div>
               </div>
               <button
                 onClick={() => setCheckoutBill(null)}
