@@ -1,0 +1,35 @@
+{
+  "version": 2,
+  "name": "hotel-management",
+  "builds": [
+    {
+      "src": "Hotel-management-main/frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "build"
+      }
+    },
+    {
+      "src": "api/*.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/Hotel-management-main/frontend/$1"
+    }
+  ],
+  "env": {
+    "REACT_APP_BACKEND_URL": "@react_app_backend_url"
+  },
+  "functions": {
+    "api/*.py": {
+      "runtime": "python3.9"
+    }
+  }
+}

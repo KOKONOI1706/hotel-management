@@ -1,0 +1,16 @@
+{
+  "name": "hotel-management",
+  "version": "1.0.0",
+  "description": "Hotel Management System with React frontend and FastAPI backend",
+  "scripts": {
+    "build": "cd Hotel-management-main/frontend && npm install && npm run build",
+    "dev": "cd Hotel-management-main/frontend && npm start",
+    "start": "cd Hotel-management-main/frontend && npm start",
+    "backend": "cd Hotel-management-main/backend && python server.py"
+  },
+  "keywords": ["hotel", "management", "react", "fastapi", "vercel"],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {}
+}

@@ -1,0 +1,19 @@
+# Temporary files
+tempCodeRunnerFile.py
+tempCodeRunnerFile.*
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment
+.env
+*.env
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
