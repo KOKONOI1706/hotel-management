@@ -479,14 +479,22 @@ def get_company_summary(
         "grand_total": sum(c["total_amount"] for c in companies)
     }
 
+# Health check endpoint
+@app.get("/")
+def health_check():
+    return {"status": "ok", "message": "Hotel Management API is running"}
+
+@app.get("/api/health")
+def health():
+    return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
+
 @app.get("/api/bills")
 def get_bills():
     bills = load_json_file(BILLS_FILE, [])
     return bills
 
-# Main handler for Vercel
-def handler(request):
-    return app(request)
+# Main handler for Vercel (ASGI application)
+app_handler = app
 
 # For local development
 if __name__ == "__main__":

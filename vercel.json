@@ -19,8 +19,16 @@
       "dest": "/api/index.py"
     },
     {
+      "src": "/static/(.*)",
+      "dest": "/Hotel-management-main/frontend/build/static/$1"
+    },
+    {
+      "src": "/",
+      "dest": "/Hotel-management-main/frontend/build/index.html"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/Hotel-management-main/frontend/$1"
+      "dest": "/Hotel-management-main/frontend/build/index.html"
     }
   ]
 }
