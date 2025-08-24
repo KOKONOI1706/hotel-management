@@ -159,6 +159,7 @@ def read_root():
     return {"message": "Hotel Management API", "status": "running"}
 
 @app.get("/api/dashboard/stats")
+@app.get("/dashboard/stats")
 def get_dashboard_stats():
     rooms = load_json_file(ROOMS_FILE, get_default_rooms())
     orders = load_json_file(ORDERS_FILE, [])
@@ -178,6 +179,7 @@ def get_dashboard_stats():
     }
 
 @app.get("/api/rooms")
+@app.get("/rooms")
 def get_rooms():
     rooms = load_json_file(ROOMS_FILE, get_default_rooms())
     return rooms
@@ -342,6 +344,7 @@ def checkout_room(room_id: str):
     }
 
 @app.get("/api/dishes")
+@app.get("/dishes")
 def get_dishes():
     dishes = load_json_file(DISHES_FILE, get_default_dishes())
     return dishes

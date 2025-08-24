@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hotel Management Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .section { background: white; margin: 20px 0; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .result { margin: 10px 0; padding: 15px; border-radius: 4px; white-space: pre-wrap; font-family: monospace; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background-color: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        button { padding: 12px 24px; margin: 8px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        button:hover { background: #0056b3; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .loading { color: #6c757d; font-style: italic; }
+        h1, h2 { color: #333; }
+        .stats { font-weight: bold; color: #007bff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏨 Hotel Management System Debug</h1>
+        
+        <div class="section">
+            <h2>🔍 API Connectivity Test</h2>
+            <div class="grid">
+                <button onclick="testEndpoint('/api/health', 'Health Check')">🩺 Health Check</button>
+                <button onclick="testEndpoint('/api/rooms', 'Rooms Data')">🏠 Test Rooms</button>
+                <button onclick="testEndpoint('/api/dishes', 'Dishes Data')">🍽️ Test Dishes</button>
+                <button onclick="testEndpoint('/api/dashboard/stats', 'Dashboard Stats')">📊 Test Stats</button>
+                <button onclick="testAllEndpoints()">🚀 Test All</button>
+                <button onclick="clearResults()">🗑️ Clear</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📋 Test Results</h2>
+            <div id="results">
+                <div class="info">Click buttons above to test API endpoints...</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔧 Frontend Simulation</h2>
+            <button onclick="simulateFrontendFlow()">🎭 Simulate Login & Data Fetch</button>
+            <div id="simulation-results"></div>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = 'https://hotel-management-iota-rose.vercel.app';
+        let testCount = 0;
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '<div class="info">Results cleared. Ready for new tests...</div>';
+            document.getElementById('simulation-results').innerHTML = '';
+            testCount = 0;
+        }
+
+        function addResult(content, type = 'info') {
+            const resultsDiv = document.getElementById('results');
+            const timestamp = new Date().toLocaleTimeString();
+            resultsDiv.innerHTML += `
+                <div class="result ${type}">
+                    <strong>[${timestamp}] Test #${++testCount}</strong>
+                    ${content}
+                </div>
+            `;
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+        }
+
+        async function testEndpoint(endpoint, name) {
+            const url = BASE_URL + endpoint;
+            addResult(`<div class="loading">Testing ${name}...</div><div>URL: ${url}</div>`, 'info');
+            
+            try {
+                const startTime = Date.now();
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                let summary = '';
+                if (endpoint === '/api/rooms') {
+                    summary = `<div class="stats">Found ${Array.isArray(data) ? data.length : 0} rooms</div>`;
+                } else if (endpoint === '/api/dishes') {
+                    summary = `<div class="stats">Found ${Array.isArray(data) ? data.length : 0} dishes</div>`;
+                } else if (endpoint === '/api/dashboard/stats') {
+                    summary = `<div class="stats">Stats: ${JSON.stringify(data)}</div>`;
+                }
+                
+                addResult(`
+                    <strong>✅ ${name} SUCCESS</strong>
+                    <div>Status: ${response.status}</div>
+                    <div>Duration: ${duration}ms</div>
+                    ${summary}
+                    <details>
+                        <summary>📄 Full Response Data</summary>
+                        <div style="max-height: 200px; overflow-y: auto; background: #f8f9fa; padding: 10px; margin-top: 10px;">
+                            ${JSON.stringify(data, null, 2)}
+                        </div>
+                    </details>
+                `, 'success');
+                
+                return { success: true, data, status: response.status, duration };
+                
+            } catch (error) {
+                addResult(`
+                    <strong>❌ ${name} FAILED</strong>
+                    <div>Error: ${error.message}</div>
+                    <div>URL: ${url}</div>
+                `, 'error');
+                
+                return { success: false, error: error.message };
+            }
+        }
+
+        async function testAllEndpoints() {
+            addResult('<strong>🚀 Starting comprehensive API test...</strong>', 'info');
+            
+            const endpoints = [
+                ['/api/health', 'Health Check'],
+                ['/api/dashboard/stats', 'Dashboard Stats'],
+                ['/api/rooms', 'Rooms Data'],
+                ['/api/dishes', 'Dishes Data']
+            ];
+
+            let successCount = 0;
+            let totalTests = endpoints.length;
+
+            for (const [endpoint, name] of endpoints) {
+                const result = await testEndpoint(endpoint, name);
+                if (result.success) successCount++;
+                
+                // Wait a bit between requests
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            addResult(`
+                <strong>📊 TEST SUMMARY</strong>
+                <div class="stats">Success Rate: ${successCount}/${totalTests} (${(successCount/totalTests*100).toFixed(1)}%)</div>
+                <div>Result: ${successCount === totalTests ? '✅ All tests passed!' : '⚠️ Some tests failed'}</div>
+            `, successCount === totalTests ? 'success' : 'error');
+        }
+
+        async function simulateFrontendFlow() {
+            const simulationDiv = document.getElementById('simulation-results');
+            simulationDiv.innerHTML = '<div class="info loading">Simulating frontend data flow...</div>';
+
+            try {
+                // Test login flow
+                simulationDiv.innerHTML += '<div class="result info">Step 1: Simulating login (admin/admin123)...</div>';
+                
+                // Test dashboard stats
+                simulationDiv.innerHTML += '<div class="result info">Step 2: Fetching dashboard stats...</div>';
+                const statsResult = await testEndpoint('/api/dashboard/stats', 'Dashboard Stats');
+                
+                // Test rooms data
+                simulationDiv.innerHTML += '<div class="result info">Step 3: Fetching rooms data...</div>';
+                const roomsResult = await testEndpoint('/api/rooms', 'Rooms Data');
+                
+                // Test dishes data
+                simulationDiv.innerHTML += '<div class="result info">Step 4: Fetching dishes data...</div>';
+                const dishesResult = await testEndpoint('/api/dishes', 'Dishes Data');
+
+                // Summary
+                const allSuccess = statsResult.success && roomsResult.success && dishesResult.success;
+                
+                simulationDiv.innerHTML += `
+                    <div class="result ${allSuccess ? 'success' : 'error'}">
+                        <strong>🎭 FRONTEND SIMULATION COMPLETE</strong>
+                        <div>Dashboard Stats: ${statsResult.success ? '✅' : '❌'}</div>
+                        <div>Rooms Data: ${roomsResult.success ? '✅' : '❌'} (${roomsResult.data ? roomsResult.data.length || 0 : 0} rooms)</div>
+                        <div>Dishes Data: ${dishesResult.success ? '✅' : '❌'} (${dishesResult.data ? dishesResult.data.length || 0 : 0} dishes)</div>
+                        <div class="stats">
+                            ${allSuccess 
+                                ? 'All data should be visible in the frontend after login!' 
+                                : 'Frontend will show empty because API calls are failing!'
+                            }
+                        </div>
+                    </div>
+                `;
+
+            } catch (error) {
+                simulationDiv.innerHTML += `<div class="result error">Simulation failed: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-run health check on page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                addResult('<strong>🔄 Auto-running initial health check...</strong>', 'info');
+                testEndpoint('/api/health', 'Health Check');
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test - New URL</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .result { margin: 10px 0; padding: 10px; border: 1px solid #ccc; white-space: pre-wrap; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>Hotel Management API Test - New URL</h1>
+    <p><strong>Testing URL:</strong> https://hotel-management-iota-rose.vercel.app</p>
+    
+    <div>
+        <button onclick="testAPI('/api/health')">Test Health</button>
+        <button onclick="testAPI('/api/rooms')">Test Rooms</button>
+        <button onclick="testAPI('/api/dishes')">Test Dishes</button>
+        <button onclick="testAPI('/api/dashboard/stats')">Test Stats</button>
+        <button onclick="clearResults()">Clear</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <script>
+        const BASE_URL = 'https://hotel-management-iota-rose.vercel.app';
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function testAPI(endpoint) {
+            const resultsDiv = document.getElementById('results');
+            const url = BASE_URL + endpoint;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            resultsDiv.innerHTML += `<div class="result"><strong>[${timestamp}] Testing:</strong> ${endpoint}</div>`;
+            
+            try {
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                resultsDiv.innerHTML += `
+                    <div class="result success">
+                        <strong>✅ SUCCESS (${response.status})</strong>
+                        <br><strong>Endpoint:</strong> ${endpoint}
+                        <br><strong>Data:</strong> ${JSON.stringify(data, null, 2)}
+                    </div>
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML += `
+                    <div class="result error">
+                        <strong>❌ ERROR</strong>
+                        <br><strong>Endpoint:</strong> ${endpoint}
+                        <br><strong>Error:</strong> ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Auto-test health on load
+        window.addEventListener('load', () => {
+            setTimeout(() => testAPI('/api/health'), 1000);
+        });
+    </script>
+</body>
+</html>
