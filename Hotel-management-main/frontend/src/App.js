@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import "./App.css";
 import axios from "axios";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:8000";
+const BACKEND_URL = process.env.NODE_ENV === 'production' 
+  ? "https://hotel-management-meafoc17x-nguyn-duy-congs-projects.vercel.app"
+  : process.env.REACT_APP_BACKEND_URL || "http://localhost:8000";
 const API = `${BACKEND_URL}/api`;
 
 console.log("Environment:", process.env.NODE_ENV);
