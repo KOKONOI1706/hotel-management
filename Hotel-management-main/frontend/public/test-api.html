@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .result { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .success { background-color: #d4edda; }
+        .error { background-color: #f8d7da; }
+    </style>
+</head>
+<body>
+    <h1>Hotel Management API Test</h1>
+    <button onclick="testAPI()">Test API Connection</button>
+    <div id="results"></div>
+
+    <script>
+        async function testAPI() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<p>Testing API...</p>';
+            
+            const baseURL = window.location.origin;
+            const endpoints = [
+                '/api/rooms',
+                '/api/dishes',
+                '/api/dashboard/stats'
+            ];
+            
+            for (const endpoint of endpoints) {
+                try {
+                    console.log(`Testing ${baseURL}${endpoint}`);
+                    const response = await fetch(`${baseURL}${endpoint}`);
+                    const data = await response.json();
+                    
+                    resultsDiv.innerHTML += `
+                        <div class="result success">
+                            <strong>${endpoint}</strong>: ✅ Success (${response.status})
+                            <br>Data: ${JSON.stringify(data).substring(0, 200)}...
+                        </div>
+                    `;
+                } catch (error) {
+                    resultsDiv.innerHTML += `
+                        <div class="result error">
+                            <strong>${endpoint}</strong>: ❌ Error - ${error.message}
+                        </div>
+                    `;
+                }
+            }
+        }
+    </script>
+</body>
+</html>
