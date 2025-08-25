@@ -12,16 +12,22 @@ from datetime import datetime, timezone, timedelta
 from enum import Enum
 from functools import wraps
 
+# Load environment variables
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
 # MongoDB connection
-mongo_url = os.environ['MONGO_URL']
+mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+db_name = os.environ.get('DB_NAME', 'hotel_management')
+
+print(f"Connecting to MongoDB: {mongo_url}")
+print(f"Database name: {db_name}")
+
 client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+db = client[db_name]
 
 # Create the main app without a prefix
-app = FastAPI()
+app = FastAPI(title="Hotel Management API", version="1.0.0")
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
@@ -1458,10 +1464,14 @@ async def get_dashboard_stats():
 # Include the router in the main app
 app.include_router(api_router)
 
+# CORS configuration
+cors_origins = os.environ.get('CORS_ORIGINS', 'http://localhost:3000').split(',')
+print(f"CORS Origins: {cors_origins}")
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "*"],
+    allow_origins=cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -1476,6 +1486,29 @@ logger = logging.getLogger(__name__)
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
+
+# Root endpoint
+@app.get("/")
+async def root():
+    return {
+        "message": "Hotel Management API", 
+        "version": "1.0.0",
+        "status": "running",
+        "docs": "/docs"
+    }
+
+# Health check endpoint
+@app.get("/health")
+async def health_check():
+    try:
+        # Test database connection
+        await db.admin.command('ping')
+        return {"status": "healthy", "database": "connected"}
+    except Exception as e:
+        return {"status": "unhealthy", "database": "disconnected", "error": str(e)}
+
+# For Vercel deployment
+handler = app
 
 if __name__ == "__main__":
     import uvicorn

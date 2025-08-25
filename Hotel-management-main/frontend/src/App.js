@@ -3,7 +3,7 @@ import "./App.css";
 import axios from "axios";
 
 const BACKEND_URL = process.env.NODE_ENV === 'production' 
-  ? "https://hotel-management-iota-rose.vercel.app"
+  ? "https://backend-g92cr2r7w-nguyn-duy-congs-projects.vercel.app"
   : process.env.REACT_APP_BACKEND_URL || "http://localhost:8000";
 const API = `${BACKEND_URL}/api`;
 
@@ -1004,10 +1004,37 @@ const Dashboard = ({ admin, onLogout }) => {
     monthly_rate: 12000000
   });
 
+  // Helper functions to save data to localStorage
+  const saveRoomsToStorage = (roomsData) => {
+    localStorage.setItem('hotel_rooms', JSON.stringify(roomsData));
+  };
+
+  const saveOrdersToStorage = (ordersData) => {
+    localStorage.setItem('hotel_orders', JSON.stringify(ordersData));
+  };
+
+  const saveBillsToStorage = (billsData) => {
+    localStorage.setItem('hotel_bills', JSON.stringify(billsData));
+  };
+
+  const clearAllData = () => {
+    if (window.confirm('Bạn có chắc muốn xóa tất cả dữ liệu? Hành động này không thể hoàn tác!')) {
+      localStorage.removeItem('hotel_rooms');
+      localStorage.removeItem('hotel_orders');
+      localStorage.removeItem('hotel_bills');
+      window.location.reload();
+    }
+  };
+
   const fetchData = async () => {
     setLoading(true);
     try {
-      console.log("Using mock data due to API issues");
+      console.log("Loading data from localStorage or using mock data");
+      
+      // Try to load from localStorage first
+      const savedRooms = localStorage.getItem('hotel_rooms');
+      const savedOrders = localStorage.getItem('hotel_orders');
+      const savedBills = localStorage.getItem('hotel_bills');
       
       // Mock data for development/testing
       const mockStats = {
@@ -1018,7 +1045,7 @@ const Dashboard = ({ admin, onLogout }) => {
         today_revenue: 0
       };
       
-      const mockRooms = [
+      const defaultRooms = [
         {"id": "1", "number": "201", "type": "single", "status": "empty", "pricing": {"hourly_first": 80000, "hourly_second": 40000, "hourly_additional": 20000, "daily_rate": 500000, "monthly_rate": 12000000}},
         {"id": "2", "number": "202", "type": "single", "status": "empty", "pricing": {"hourly_first": 80000, "hourly_second": 40000, "hourly_additional": 20000, "daily_rate": 500000, "monthly_rate": 12000000}},
         {"id": "3", "number": "203", "type": "double", "status": "empty", "pricing": {"hourly_first": 80000, "hourly_second": 40000, "hourly_additional": 20000, "daily_rate": 500000, "monthly_rate": 12000000}},
@@ -1074,17 +1101,70 @@ const Dashboard = ({ admin, onLogout }) => {
           "status": "confirmed"
         }
       ];
+
+      const defaultOrders = [
+        {
+          "id": "1",
+          "company_name": "FPT Corporation",
+          "dish_id": "1",
+          "dish_name": "Phở bò",
+          "quantity": 5,
+          "price_per_unit": 50000,
+          "total_price": 250000,
+          "order_date": "2025-08-25T10:30:00Z",
+          "status": "confirmed"
+        },
+        {
+          "id": "2", 
+          "company_name": "Viettel Group",
+          "dish_id": "2",
+          "dish_name": "Cơm tấm",
+          "quantity": 3,
+          "price_per_unit": 45000,
+          "total_price": 135000,
+          "order_date": "2025-08-25T11:15:00Z",
+          "status": "confirmed"
+        },
+        {
+          "id": "3",
+          "company_name": "VinGroup",
+          "dish_id": "4",
+          "dish_name": "Bún chả",
+          "quantity": 2,
+          "price_per_unit": 55000,
+          "total_price": 110000,
+          "order_date": "2025-08-25T12:00:00Z",
+          "status": "confirmed"
+        }
+      ];
       
-      console.log("Mock stats:", mockStats);
-      console.log("Mock rooms:", mockRooms);
+      // Load from localStorage or use defaults
+      const currentRooms = savedRooms ? JSON.parse(savedRooms) : defaultRooms;
+      const currentOrders = savedOrders ? JSON.parse(savedOrders) : defaultOrders;
+      const currentBills = savedBills ? JSON.parse(savedBills) : [];
+      
+      // Calculate stats based on current room data
+      const occupiedRooms = currentRooms.filter(room => room.status === 'occupied').length;
+      const emptyRooms = currentRooms.filter(room => room.status === 'empty').length;
+      const currentStats = {
+        total_rooms: currentRooms.length,
+        empty_rooms: emptyRooms,
+        occupied_rooms: occupiedRooms,
+        occupancy_rate: currentRooms.length > 0 ? (occupiedRooms / currentRooms.length * 100).toFixed(1) : 0,
+        today_revenue: currentBills.reduce((sum, bill) => sum + (bill.cost_calculation?.total_cost || 0), 0)
+      };
+      
+      console.log("Current stats:", currentStats);
+      console.log("Current rooms:", currentRooms);
       console.log("Mock dishes:", mockDishes);
-      console.log("Mock orders:", mockOrders);
+      console.log("Current orders:", currentOrders);
+      console.log("Current bills:", currentBills);
       
-      setStats(mockStats);
-      setRooms(mockRooms);
+      setStats(currentStats);
+      setRooms(currentRooms);
       setDishes(mockDishes);
-      setOrders(mockOrders);
-      setBills([]);
+      setOrders(currentOrders);
+      setBills(currentBills);
       
     } catch (error) {
       console.error("Error with mock data:", error);
@@ -1182,6 +1262,7 @@ const Dashboard = ({ admin, onLogout }) => {
       });
       
       setRooms(updatedRooms);
+      saveRoomsToStorage(updatedRooms);
       
       // Update stats
       const newOccupiedRooms = updatedRooms.filter(r => r.status === "occupied").length;
@@ -1340,6 +1421,7 @@ const Dashboard = ({ admin, onLogout }) => {
       });
       
       setRooms(updatedRooms);
+      saveRoomsToStorage(updatedRooms);
       
       // Update stats
       const newOccupiedRooms = updatedRooms.filter(r => r.status === "occupied").length;
@@ -1362,7 +1444,11 @@ const Dashboard = ({ admin, onLogout }) => {
         cost_calculation: currentCost
       };
       
-      setBills(prevBills => [mockBill, ...prevBills]);
+      setBills(prevBills => {
+        const updatedBills = [mockBill, ...prevBills];
+        saveBillsToStorage(updatedBills);
+        return updatedBills;
+      });
       setCheckoutBill(mockBill);
       setShowCheckOutModal(false);
       
@@ -1461,7 +1547,9 @@ const Dashboard = ({ admin, onLogout }) => {
       };
 
       // Add to orders list
-      setOrders(prevOrders => [newOrder, ...prevOrders]);
+      const updatedOrders = [newOrder, ...orders];
+      setOrders(updatedOrders);
+      saveOrdersToStorage(updatedOrders);
       
       // Reset form and close modal
       setShowOrderModal(false);
