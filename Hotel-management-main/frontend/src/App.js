@@ -1004,165 +1004,112 @@ const Dashboard = ({ admin, onLogout }) => {
     monthly_rate: 12000000
   });
 
-  // Helper functions to save data to localStorage
-  const saveRoomsToStorage = (roomsData) => {
-    localStorage.setItem('hotel_rooms', JSON.stringify(roomsData));
-  };
-
-  const saveOrdersToStorage = (ordersData) => {
-    localStorage.setItem('hotel_orders', JSON.stringify(ordersData));
-  };
-
-  const saveBillsToStorage = (billsData) => {
-    localStorage.setItem('hotel_bills', JSON.stringify(billsData));
-  };
-
-  const clearAllData = () => {
-    if (window.confirm('Bạn có chắc muốn xóa tất cả dữ liệu? Hành động này không thể hoàn tác!')) {
-      localStorage.removeItem('hotel_rooms');
-      localStorage.removeItem('hotel_orders');
-      localStorage.removeItem('hotel_bills');
-      window.location.reload();
-    }
-  };
-
   const fetchData = async () => {
     setLoading(true);
     try {
-      console.log("Loading data from localStorage or using mock data");
+      console.log("Loading data from backend MongoDB Atlas");
       
-      // Try to load from localStorage first
-      const savedRooms = localStorage.getItem('hotel_rooms');
-      const savedOrders = localStorage.getItem('hotel_orders');
-      const savedBills = localStorage.getItem('hotel_bills');
+      // Fetch data from backend APIs
+      const [roomsRes, dishesRes, ordersRes, billsRes, statsRes] = await Promise.allSettled([
+        axios.get(`${API}/rooms`),
+        axios.get(`${API}/dishes`),
+        axios.get(`${API}/orders`),
+        axios.get(`${API}/bills`),
+        axios.get(`${API}/stats`)
+      ]);
       
-      // Mock data for development/testing
-      const mockStats = {
-        total_rooms: 10,
-        empty_rooms: 10, 
-        occupied_rooms: 0,
-        occupancy_rate: 0,
-        today_revenue: 0
-      };
-      
-      const defaultRooms = [
-        {"id": "1", "number": "201", "type": "single", "status": "empty", "pricing": {"hourly_first": 80000, "hourly_second": 40000, "hourly_additional": 20000, "daily_rate": 500000, "monthly_rate": 12000000}},
-        {"id": "2", "number": "202", "type": "single", "status": "empty", "pricing": {"hourly_first": 80000, "hourly_second": 40000, "hourly_additional": 20000, "daily_rate": 500000, "monthly_rate": 12000000}},
-        {"id": "3", "number": "203", "type": "double", "status": "empty", "pricing": {"hourly_first": 80000, "hourly_second": 40000, "hourly_additional": 20000, "daily_rate": 500000, "monthly_rate": 12000000}},
-        {"id": "4", "number": "204", "type": "single", "status": "empty", "pricing": {"hourly_first": 80000, "hourly_second": 40000, "hourly_additional": 20000, "daily_rate": 500000, "monthly_rate": 12000000}},
-        {"id": "5", "number": "205", "type": "double", "status": "empty", "pricing": {"hourly_first": 80000, "hourly_second": 40000, "hourly_additional": 20000, "daily_rate": 500000, "monthly_rate": 12000000}},
-        {"id": "6", "number": "206", "type": "single", "status": "empty", "pricing": {"hourly_first": 80000, "hourly_second": 40000, "hourly_additional": 20000, "daily_rate": 500000, "monthly_rate": 12000000}},
-        {"id": "7", "number": "207", "type": "double", "status": "empty", "pricing": {"hourly_first": 80000, "hourly_second": 40000, "hourly_additional": 20000, "daily_rate": 500000, "monthly_rate": 12000000}},
-        {"id": "8", "number": "208", "type": "single", "status": "empty", "pricing": {"hourly_first": 80000, "hourly_second": 40000, "hourly_additional": 20000, "daily_rate": 500000, "monthly_rate": 12000000}},
-        {"id": "9", "number": "209", "type": "double", "status": "empty", "pricing": {"hourly_first": 80000, "hourly_second": 40000, "hourly_additional": 20000, "daily_rate": 500000, "monthly_rate": 12000000}},
-        {"id": "10", "number": "210", "type": "single", "status": "empty", "pricing": {"hourly_first": 80000, "hourly_second": 40000, "hourly_additional": 20000, "daily_rate": 500000, "monthly_rate": 12000000}}
-      ];
-      
-      const mockDishes = [
-        {"id": "1", "name": "Phở bò", "price": 50000, "description": "Phở bò truyền thống", "status": "available"},
-        {"id": "2", "name": "Cơm tấm", "price": 45000, "description": "Cơm tấm sườn nướng", "status": "available"},
-        {"id": "3", "name": "Bánh mì", "price": 25000, "description": "Bánh mì thịt nguội", "status": "available"},
-        {"id": "4", "name": "Bún chả", "price": 55000, "description": "Bún chả Hà Nội", "status": "available"},
-        {"id": "5", "name": "Gỏi cuốn", "price": 35000, "description": "Gỏi cuốn tôm thịt", "status": "available"}
-      ];
-
-      const mockOrders = [
-        {
-          "id": "1",
-          "company_name": "FPT Corporation",
-          "dish_id": "1",
-          "dish_name": "Phở bò",
-          "quantity": 5,
-          "price_per_unit": 50000,
-          "total_price": 250000,
-          "order_date": "2025-08-25T10:30:00Z",
-          "status": "confirmed"
-        },
-        {
-          "id": "2", 
-          "company_name": "Viettel Group",
-          "dish_id": "2",
-          "dish_name": "Cơm tấm",
-          "quantity": 3,
-          "price_per_unit": 45000,
-          "total_price": 135000,
-          "order_date": "2025-08-25T11:15:00Z",
-          "status": "confirmed"
-        },
-        {
-          "id": "3",
-          "company_name": "VinGroup",
-          "dish_id": "4",
-          "dish_name": "Bún chả",
-          "quantity": 2,
-          "price_per_unit": 55000,
-          "total_price": 110000,
-          "order_date": "2025-08-25T12:00:00Z",
-          "status": "confirmed"
+      // Process rooms data
+      let currentRooms = [];
+      if (roomsRes.status === 'fulfilled' && roomsRes.value?.data) {
+        currentRooms = roomsRes.value.data;
+      } else {
+        console.log("Using default rooms data");
+        currentRooms = [
+          {"id": "1", "number": "201", "type": "single", "status": "empty", "pricing": {"hourly_first": 80000, "hourly_second": 40000, "hourly_additional": 20000, "daily_rate": 500000, "monthly_rate": 12000000}},
+          {"id": "2", "number": "202", "type": "single", "status": "empty", "pricing": {"hourly_first": 80000, "hourly_second": 40000, "hourly_additional": 20000, "daily_rate": 500000, "monthly_rate": 12000000}},
+          {"id": "3", "number": "203", "type": "double", "status": "empty", "pricing": {"hourly_first": 80000, "hourly_second": 40000, "hourly_additional": 20000, "daily_rate": 500000, "monthly_rate": 12000000}},
+          {"id": "4", "number": "204", "type": "single", "status": "empty", "pricing": {"hourly_first": 80000, "hourly_second": 40000, "hourly_additional": 20000, "daily_rate": 500000, "monthly_rate": 12000000}},
+          {"id": "5", "number": "205", "type": "double", "status": "empty", "pricing": {"hourly_first": 80000, "hourly_second": 40000, "hourly_additional": 20000, "daily_rate": 500000, "monthly_rate": 12000000}},
+          {"id": "6", "number": "206", "type": "single", "status": "empty", "pricing": {"hourly_first": 80000, "hourly_second": 40000, "hourly_additional": 20000, "daily_rate": 500000, "monthly_rate": 12000000}},
+          {"id": "7", "number": "207", "type": "double", "status": "empty", "pricing": {"hourly_first": 80000, "hourly_second": 40000, "hourly_additional": 20000, "daily_rate": 500000, "monthly_rate": 12000000}},
+          {"id": "8", "number": "208", "type": "single", "status": "empty", "pricing": {"hourly_first": 80000, "hourly_second": 40000, "hourly_additional": 20000, "daily_rate": 500000, "monthly_rate": 12000000}},
+          {"id": "9", "number": "209", "type": "double", "status": "empty", "pricing": {"hourly_first": 80000, "hourly_second": 40000, "hourly_additional": 20000, "daily_rate": 500000, "monthly_rate": 12000000}},
+          {"id": "10", "number": "210", "type": "single", "status": "empty", "pricing": {"hourly_first": 80000, "hourly_second": 40000, "hourly_additional": 20000, "daily_rate": 500000, "monthly_rate": 12000000}}
+        ];
+        // Initialize default rooms in backend
+        try {
+          await axios.post(`${API}/rooms/init`, currentRooms);
+        } catch (error) {
+          console.error("Error initializing default rooms:", error);
         }
-      ];
-
-      const defaultOrders = [
-        {
-          "id": "1",
-          "company_name": "FPT Corporation",
-          "dish_id": "1",
-          "dish_name": "Phở bò",
-          "quantity": 5,
-          "price_per_unit": 50000,
-          "total_price": 250000,
-          "order_date": "2025-08-25T10:30:00Z",
-          "status": "confirmed"
-        },
-        {
-          "id": "2", 
-          "company_name": "Viettel Group",
-          "dish_id": "2",
-          "dish_name": "Cơm tấm",
-          "quantity": 3,
-          "price_per_unit": 45000,
-          "total_price": 135000,
-          "order_date": "2025-08-25T11:15:00Z",
-          "status": "confirmed"
-        },
-        {
-          "id": "3",
-          "company_name": "VinGroup",
-          "dish_id": "4",
-          "dish_name": "Bún chả",
-          "quantity": 2,
-          "price_per_unit": 55000,
-          "total_price": 110000,
-          "order_date": "2025-08-25T12:00:00Z",
-          "status": "confirmed"
+      }
+      
+      // Process dishes data
+      let currentDishes = [];
+      if (dishesRes.status === 'fulfilled' && dishesRes.value?.data) {
+        currentDishes = dishesRes.value.data;
+      } else {
+        console.log("Using default dishes data");
+        currentDishes = [
+          {"id": "1", "name": "Phở bò", "price": 50000, "description": "Phở bò truyền thống", "status": "available"},
+          {"id": "2", "name": "Cơm tấm", "price": 45000, "description": "Cơm tấm sườn nướng", "status": "available"},
+          {"id": "3", "name": "Bánh mì", "price": 25000, "description": "Bánh mì thịt nguội", "status": "available"},
+          {"id": "4", "name": "Bún chả", "price": 55000, "description": "Bún chả Hà Nội", "status": "available"},
+          {"id": "5", "name": "Gỏi cuốn", "price": 35000, "description": "Gỏi cuốn tôm thịt", "status": "available"}
+        ];
+        // Initialize default dishes in backend
+        try {
+          await axios.post(`${API}/dishes/init`, currentDishes);
+        } catch (error) {
+          console.error("Error initializing default dishes:", error);
         }
-      ];
+      }
       
-      // Load from localStorage or use defaults
-      const currentRooms = savedRooms ? JSON.parse(savedRooms) : defaultRooms;
-      const currentOrders = savedOrders ? JSON.parse(savedOrders) : defaultOrders;
-      const currentBills = savedBills ? JSON.parse(savedBills) : [];
+      // Process orders data
+      let currentOrders = [];
+      if (ordersRes.status === 'fulfilled' && ordersRes.value?.data) {
+        currentOrders = ordersRes.value.data;
+      } else {
+        console.log("No orders found, starting with empty list");
+        currentOrders = [];
+      }
       
-      // Calculate stats based on current room data
-      const occupiedRooms = currentRooms.filter(room => room.status === 'occupied').length;
-      const emptyRooms = currentRooms.filter(room => room.status === 'empty').length;
-      const currentStats = {
-        total_rooms: currentRooms.length,
-        empty_rooms: emptyRooms,
-        occupied_rooms: occupiedRooms,
-        occupancy_rate: currentRooms.length > 0 ? (occupiedRooms / currentRooms.length * 100).toFixed(1) : 0,
-        today_revenue: currentBills.reduce((sum, bill) => sum + (bill.cost_calculation?.total_cost || 0), 0)
-      };
+      // Process bills data
+      let currentBills = [];
+      if (billsRes.status === 'fulfilled' && billsRes.value?.data) {
+        currentBills = billsRes.value.data;
+      } else {
+        console.log("No bills found, starting with empty list");
+        currentBills = [];
+      }
       
-      console.log("Current stats:", currentStats);
-      console.log("Current rooms:", currentRooms);
-      console.log("Mock dishes:", mockDishes);
-      console.log("Current orders:", currentOrders);
-      console.log("Current bills:", currentBills);
+      // Process stats data
+      let currentStats = {};
+      if (statsRes.status === 'fulfilled' && statsRes.value?.data) {
+        currentStats = statsRes.value.data;
+      } else {
+        console.log("Calculating stats from room data");
+        const occupiedRooms = currentRooms.filter(room => room.status === 'occupied').length;
+        const emptyRooms = currentRooms.filter(room => room.status === 'empty').length;
+        currentStats = {
+          total_rooms: currentRooms.length,
+          empty_rooms: emptyRooms,
+          occupied_rooms: occupiedRooms,
+          occupancy_rate: currentRooms.length > 0 ? (occupiedRooms / currentRooms.length * 100).toFixed(1) : 0,
+          today_revenue: currentBills.reduce((sum, bill) => sum + (bill.cost_calculation?.total_cost || 0), 0)
+        };
+      }
+      
+      console.log("Backend data loaded:");
+      console.log("Stats:", currentStats);
+      console.log("Rooms:", currentRooms);
+      console.log("Dishes:", currentDishes);
+      console.log("Orders:", currentOrders);
+      console.log("Bills:", currentBills);
       
       setStats(currentStats);
       setRooms(currentRooms);
-      setDishes(mockDishes);
+      setDishes(currentDishes);
       setOrders(currentOrders);
       setBills(currentBills);
       
@@ -1176,6 +1123,7 @@ const Dashboard = ({ admin, onLogout }) => {
   const fetchFilteredOrders = async (filterParams) => {
     try {
       const url = filterParams ? `${API}/orders?${filterParams}` : `${API}/orders`;
+      console.log("Fetching filtered orders from:", url);
       const response = await axios.get(url);
       setOrders(response.data);
     } catch (error) {
@@ -1194,124 +1142,73 @@ const Dashboard = ({ admin, onLogout }) => {
     console.log("Is company check-in:", isCompanyCheckIn);
     
     try {
-      // Mock check-in logic since API is not working
-      const currentDate = new Date();
-      const checkOutDate = new Date();
-      
       const form = isCompanyCheckIn ? companyCheckInForm : checkInForm;
       
-      if (form.booking_type === "hourly") {
-        checkOutDate.setHours(checkOutDate.getHours() + parseInt(form.duration));
-      } else if (form.booking_type === "daily") {
-        checkOutDate.setDate(checkOutDate.getDate() + parseInt(form.duration));
-      } else if (form.booking_type === "monthly") {
-        checkOutDate.setMonth(checkOutDate.getMonth() + parseInt(form.duration));
-      }
+      // Prepare check-in data for backend
+      const checkInData = {
+        room_id: selectedRoom.id,
+        booking_type: form.booking_type,
+        duration: parseInt(form.duration || 1),
+        ...(isCompanyCheckIn ? {
+          company_name: companyCheckInForm.company_name,
+          guests: companyCheckInForm.guests.filter(guest => guest.name.trim())
+        } : {
+          guest_name: checkInForm.guest_name,
+          guest_phone: checkInForm.guest_phone,
+          guest_id: checkInForm.guest_id
+        })
+      };
       
-      // Calculate estimated cost
-      const duration = parseInt(form.duration || 1);
-      const pricing = selectedRoom.pricing || {};
-      let totalCost = 0;
+      console.log("Sending check-in data to backend:", checkInData);
       
-      if (form.booking_type === "hourly") {
-        if (duration <= 1) {
-          totalCost = pricing.hourly_first || 80000;
-        } else if (duration <= 2) {
-          totalCost = (pricing.hourly_first || 80000) + (pricing.hourly_second || 40000);
-        } else {
-          totalCost = (pricing.hourly_first || 80000) + (pricing.hourly_second || 40000) + 
-                     ((duration - 2) * (pricing.hourly_additional || 20000));
-        }
-      } else if (form.booking_type === "daily") {
-        totalCost = duration * (pricing.daily_rate || 500000);
-      } else if (form.booking_type === "monthly") {
-        totalCost = duration * (pricing.monthly_rate || 12000000);
-      }
+      // Send check-in request to backend
+      const response = await axios.post(`${API}/rooms/${selectedRoom.id}/checkin`, checkInData);
       
-      // Update room status in local state
-      const updatedRooms = rooms.map(room => {
-        if (room.id === selectedRoom.id) {
-          if (isCompanyCheckIn) {
-            return {
-              ...room,
-              status: "occupied",
-              company_name: companyCheckInForm.company_name,
-              guests: companyCheckInForm.guests.filter(guest => guest.name.trim()),
-              check_in_date: currentDate.toISOString(),
-              check_out_date: checkOutDate.toISOString(),
-              booking_type: companyCheckInForm.booking_type,
-              booking_duration: parseInt(companyCheckInForm.duration),
-              total_cost: totalCost
-            };
-          } else {
-            return {
-              ...room,
-              status: "occupied",
-              guest_name: checkInForm.guest_name,
-              guest_phone: checkInForm.guest_phone,
-              guest_id: checkInForm.guest_id,
-              check_in_date: currentDate.toISOString(),
-              check_out_date: checkOutDate.toISOString(),
-              booking_type: checkInForm.booking_type,
-              booking_duration: parseInt(checkInForm.duration),
-              total_cost: totalCost
-            };
-          }
-        }
-        return room;
-      });
-      
-      setRooms(updatedRooms);
-      saveRoomsToStorage(updatedRooms);
-      
-      // Update stats
-      const newOccupiedRooms = updatedRooms.filter(r => r.status === "occupied").length;
-      const newEmptyRooms = updatedRooms.filter(r => r.status === "empty").length;
-      setStats(prevStats => ({
-        ...prevStats,
-        occupied_rooms: newOccupiedRooms,
-        empty_rooms: newEmptyRooms,
-        occupancy_rate: Math.round((newOccupiedRooms / updatedRooms.length) * 100)
-      }));
-      
-      setShowCheckInModal(false);
-      setIsCompanyCheckIn(false);
-      setCheckInForm({ 
-        guest_name: "",
-        guest_phone: "",
-        guest_id: "",
-        booking_type: "hourly",
-        duration: 1
-      });
-      setCompanyCheckInForm({
-        company_name: "",
-        guests: [{ name: "", phone: "", email: "", id_card: "" }],
-        booking_type: "hourly",
-        duration: 1
-      });
-      
-      // Success notification
-      const bookingTypeText = form.booking_type === 'hourly' ? 'giờ' : 
-                             form.booking_type === 'daily' ? 'ngày' : 'tháng';
-      
-      if (isCompanyCheckIn) {
-        alert(`✅ Check-in công ty thành công!
+      if (response.data) {
+        console.log("Check-in successful:", response.data);
+        
+        // Refresh data from backend
+        await fetchData();
+        
+        setShowCheckInModal(false);
+        setIsCompanyCheckIn(false);
+        setCheckInForm({ 
+          guest_name: "",
+          guest_phone: "",
+          guest_id: "",
+          booking_type: "hourly",
+          duration: 1
+        });
+        setCompanyCheckInForm({
+          company_name: "",
+          guests: [{ name: "", phone: "", email: "", id_card: "" }],
+          booking_type: "hourly",
+          duration: 1
+        });
+        
+        // Success notification
+        const bookingTypeText = form.booking_type === 'hourly' ? 'giờ' : 
+                               form.booking_type === 'daily' ? 'ngày' : 'tháng';
+        
+        if (isCompanyCheckIn) {
+          alert(`✅ Check-in công ty thành công!
 🏢 Công ty: ${companyCheckInForm.company_name}
 👥 Số khách: ${companyCheckInForm.guests.filter(g => g.name.trim()).length}
 📅 Loại đặt: ${form.duration} ${bookingTypeText}
-💰 Tổng chi phí: ${totalCost.toLocaleString()} VND
+💰 Tổng chi phí: ${response.data.total_cost?.toLocaleString() || 'N/A'} VND
 🏠 Phòng: ${selectedRoom.number}`);
-      } else {
-        alert(`✅ Check-in thành công!
+        } else {
+          alert(`✅ Check-in thành công!
 👤 Khách: ${checkInForm.guest_name}
 📅 Loại đặt: ${form.duration} ${bookingTypeText}
-💰 Tổng chi phí: ${totalCost.toLocaleString()} VND
+💰 Tổng chi phí: ${response.data.total_cost?.toLocaleString() || 'N/A'} VND
 🏠 Phòng: ${selectedRoom.number}`);
+        }
       }
       
     } catch (error) {
       console.error("Check-in error:", error);
-      alert("❌ Lỗi khi check-in: " + error.message);
+      alert("❌ Lỗi khi check-in: " + (error.response?.data?.detail || error.message));
     }
   };
 
@@ -1370,93 +1267,53 @@ const Dashboard = ({ admin, onLogout }) => {
 
   const handleCheckOut = async (room) => {
     try {
-      // Mock checkout logic
-      const checkInTime = new Date(room.check_in_date);
-      const checkOutTime = new Date();
-      const diffMs = checkOutTime - checkInTime;
-      const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
-      const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+      console.log("Starting checkout for room:", room);
       
-      // Calculate final cost
-      let finalCost = room.total_cost || 0;
+      // Get cost calculation from backend
+      const response = await axios.post(`${API}/rooms/${room.id}/checkout/calculate`);
       
-      // Mock cost calculation data
-      const mockCostData = {
-        check_in_time: room.check_in_date,
-        check_out_time: checkOutTime.toISOString(),
-        duration_hours: diffHours,
-        duration_days: diffDays,
-        total_cost: finalCost,
-        calculation_type: room.booking_type,
-        details: `${room.booking_type} - ${room.booking_duration} ${room.booking_type === 'hourly' ? 'giờ' : room.booking_type === 'daily' ? 'ngày' : 'tháng'}`
-      };
-      
-      setCurrentCost(mockCostData);
-      setSelectedRoom(room);
-      setShowCheckOutModal(true);
+      if (response.data) {
+        console.log("Cost calculation received:", response.data);
+        setCurrentCost(response.data);
+        setSelectedRoom(room);
+        setShowCheckOutModal(true);
+      }
     } catch (error) {
-      alert("Lỗi khi tính toán chi phí: " + error.message);
+      console.error("Checkout calculation error:", error);
+      alert("Lỗi khi tính toán chi phí: " + (error.response?.data?.detail || error.message));
     }
   };
 
   const confirmCheckOut = async () => {
     try {
-      // Mock checkout - update room to empty status
-      const updatedRooms = rooms.map(room => {
-        if (room.id === selectedRoom.id) {
-          return {
-            ...room,
-            status: "empty",
-            guest_name: null,
-            company_name: null,
-            guests: [],
-            check_in_date: null,
-            check_out_date: null,
-            booking_type: null,
-            booking_duration: null,
-            total_cost: null
-          };
-        }
-        return room;
-      });
+      console.log("Confirming checkout for room:", selectedRoom.id);
       
-      setRooms(updatedRooms);
-      saveRoomsToStorage(updatedRooms);
+      // Send checkout confirmation to backend
+      const response = await axios.post(`${API}/rooms/${selectedRoom.id}/checkout/confirm`);
       
-      // Update stats
-      const newOccupiedRooms = updatedRooms.filter(r => r.status === "occupied").length;
-      const newEmptyRooms = updatedRooms.filter(r => r.status === "empty").length;
-      setStats(prevStats => ({
-        ...prevStats,
-        occupied_rooms: newOccupiedRooms,
-        empty_rooms: newEmptyRooms,
-        occupancy_rate: Math.round((newOccupiedRooms / updatedRooms.length) * 100),
-        today_revenue: (prevStats.today_revenue || 0) + (currentCost?.total_cost || 0)
-      }));
-      
-      // Create mock bill
-      const mockBill = {
-        id: Date.now().toString(),
-        room_number: selectedRoom.number,
-        guest_name: selectedRoom.guest_name || selectedRoom.company_name || "Unknown",
-        check_in_time: currentCost.check_in_time,
-        check_out_time: currentCost.check_out_time,
-        cost_calculation: currentCost
-      };
-      
-      setBills(prevBills => {
-        const updatedBills = [mockBill, ...prevBills];
-        saveBillsToStorage(updatedBills);
-        return updatedBills;
-      });
-      setCheckoutBill(mockBill);
-      setShowCheckOutModal(false);
-      
-      // Show checkout alert with bill details
-      alert("✅ Check-out thành công!\n🏠 Phòng: " + selectedRoom.number + "\n💰 Tổng tiền: " + currentCost.total_cost?.toLocaleString() + " VND\n⏰ Thời gian lưu trú: " + currentCost.duration_hours + " giờ");
+      if (response.data) {
+        console.log("Checkout confirmed:", response.data);
+        
+        // Create bill from response
+        const bill = response.data.bill;
+        setBills(prevBills => [bill, ...prevBills]);
+        setCheckoutBill(bill);
+        
+        // Refresh data from backend
+        await fetchData();
+        
+        setShowCheckOutModal(false);
+        
+        // Show checkout alert with bill details
+        alert(`✅ Check-out thành công!
+🏠 Phòng: ${selectedRoom.number}
+💰 Tổng tiền: ${bill.cost_calculation?.total_cost?.toLocaleString() || 'N/A'} VND
+⏰ Thời gian lưu trú: ${bill.cost_calculation?.duration_hours || 'N/A'} giờ`);
+      }
       
     } catch (error) {
-      alert("Lỗi khi check-out: " + error.message);
+      console.error("Checkout confirmation error:", error);
+      alert("Lỗi khi check-out: " + (error.response?.data?.detail || error.message));
     }
   };
 
@@ -1515,52 +1372,52 @@ const Dashboard = ({ admin, onLogout }) => {
         return;
       }
       
-      // Debug logging
-      console.log("Order form:", orderForm);
-      console.log("Available dishes:", dishes);
-      console.log("Looking for dish_id:", orderForm.dish_id);
-      
-      // Mock logic for creating order - try both string and number comparison
+      // Find selected dish
       const selectedDish = dishes.find(dish => 
         dish.id === orderForm.dish_id || 
         dish.id === parseInt(orderForm.dish_id) ||
         dish.id.toString() === orderForm.dish_id
       );
       
-      console.log("Selected dish:", selectedDish);
-      
       if (!selectedDish) {
-        alert(`❌ Không tìm thấy món ăn! ID: ${orderForm.dish_id}\nDanh sách ID có sẵn: ${dishes.map(d => d.id).join(', ')}`);
+        alert(`❌ Không tìm thấy món ăn! ID: ${orderForm.dish_id}`);
         return;
       }
 
-      const newOrder = {
-        id: Date.now(), // Simple ID generation
+      // Prepare order data for backend
+      const orderData = {
         company_name: orderForm.company_name,
         dish_id: selectedDish.id,
-        dish_name: selectedDish.name,
-        quantity: parseInt(orderForm.quantity),
-        price_per_unit: selectedDish.price,
-        total_price: selectedDish.price * parseInt(orderForm.quantity),
-        order_date: new Date().toISOString(),
-        status: "confirmed"
+        quantity: parseInt(orderForm.quantity)
       };
-
-      // Add to orders list
-      const updatedOrders = [newOrder, ...orders];
-      setOrders(updatedOrders);
-      saveOrdersToStorage(updatedOrders);
       
-      // Reset form and close modal
-      setShowOrderModal(false);
-      setOrderForm({ company_name: "", dish_id: "", quantity: 1 });
+      console.log("Sending order data to backend:", orderData);
       
-      // Show success message
-      alert(`✅ Đặt món thành công!\n🍽️ Món: ${selectedDish.name}\n🏢 Công ty: ${orderForm.company_name}\n📦 Số lượng: ${orderForm.quantity}\n💰 Tổng tiền: ${newOrder.total_price.toLocaleString()} VND`);
+      // Send order to backend
+      const response = await axios.post(`${API}/orders`, orderData);
+      
+      if (response.data) {
+        console.log("Order created successfully:", response.data);
+        
+        // Refresh orders from backend
+        await fetchData();
+        
+        // Reset form and close modal
+        setShowOrderModal(false);
+        setOrderForm({ company_name: "", dish_id: "", quantity: 1 });
+        
+        // Show success message
+        const totalPrice = selectedDish.price * parseInt(orderForm.quantity);
+        alert(`✅ Đặt món thành công!
+🍽️ Món: ${selectedDish.name}
+🏢 Công ty: ${orderForm.company_name}
+📦 Số lượng: ${orderForm.quantity}
+💰 Tổng tiền: ${totalPrice.toLocaleString()} VND`);
+      }
       
     } catch (error) {
       console.error("Order creation error:", error);
-      alert("❌ Lỗi khi đặt món: " + error.message);
+      alert("❌ Lỗi khi đặt món: " + (error.response?.data?.detail || error.message));
     }
   };
 
