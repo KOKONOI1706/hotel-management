@@ -1038,15 +1038,52 @@ const Dashboard = ({ admin, onLogout }) => {
         {"id": "4", "name": "Bún chả", "price": 55000, "description": "Bún chả Hà Nội", "status": "available"},
         {"id": "5", "name": "Gỏi cuốn", "price": 35000, "description": "Gỏi cuốn tôm thịt", "status": "available"}
       ];
+
+      const mockOrders = [
+        {
+          "id": "1",
+          "company_name": "FPT Corporation",
+          "dish_id": "1",
+          "dish_name": "Phở bò",
+          "quantity": 5,
+          "price_per_unit": 50000,
+          "total_price": 250000,
+          "order_date": "2025-08-25T10:30:00Z",
+          "status": "confirmed"
+        },
+        {
+          "id": "2", 
+          "company_name": "Viettel Group",
+          "dish_id": "2",
+          "dish_name": "Cơm tấm",
+          "quantity": 3,
+          "price_per_unit": 45000,
+          "total_price": 135000,
+          "order_date": "2025-08-25T11:15:00Z",
+          "status": "confirmed"
+        },
+        {
+          "id": "3",
+          "company_name": "VinGroup",
+          "dish_id": "4",
+          "dish_name": "Bún chả",
+          "quantity": 2,
+          "price_per_unit": 55000,
+          "total_price": 110000,
+          "order_date": "2025-08-25T12:00:00Z",
+          "status": "confirmed"
+        }
+      ];
       
       console.log("Mock stats:", mockStats);
       console.log("Mock rooms:", mockRooms);
       console.log("Mock dishes:", mockDishes);
+      console.log("Mock orders:", mockOrders);
       
       setStats(mockStats);
       setRooms(mockRooms);
       setDishes(mockDishes);
-      setOrders([]);
+      setOrders(mockOrders);
       setBills([]);
       
     } catch (error) {
@@ -1376,15 +1413,37 @@ const Dashboard = ({ admin, onLogout }) => {
   const handleCreateOrder = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${API}/orders`, {
-        ...orderForm,
-        quantity: parseInt(orderForm.quantity)
-      });
+      // Mock logic for creating order
+      const selectedDish = dishes.find(dish => dish.id === parseInt(orderForm.dish_id));
+      if (!selectedDish) {
+        alert("❌ Không tìm thấy món ăn!");
+        return;
+      }
+
+      const newOrder = {
+        id: Date.now(), // Simple ID generation
+        company_name: orderForm.company_name,
+        dish_id: selectedDish.id,
+        dish_name: selectedDish.name,
+        quantity: parseInt(orderForm.quantity),
+        price_per_unit: selectedDish.price,
+        total_price: selectedDish.price * parseInt(orderForm.quantity),
+        order_date: new Date().toISOString(),
+        status: "confirmed"
+      };
+
+      // Add to orders list
+      setOrders(prevOrders => [newOrder, ...prevOrders]);
+      
+      // Reset form and close modal
       setShowOrderModal(false);
       setOrderForm({ company_name: "", dish_id: "", quantity: 1 });
-      fetchData();
+      
+      // Show success message
+      alert(`✅ Đặt món thành công!\n🍽️ Món: ${selectedDish.name}\n🏢 Công ty: ${orderForm.company_name}\n📦 Số lượng: ${orderForm.quantity}\n💰 Tổng tiền: ${newOrder.total_price.toLocaleString()} VND`);
+      
     } catch (error) {
-      alert("Lỗi: " + error.response?.data?.detail);
+      alert("❌ Lỗi khi đặt món: " + error.message);
     }
   };
 
@@ -1797,7 +1856,7 @@ const Dashboard = ({ admin, onLogout }) => {
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.company_name}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.dish_name}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.quantity}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.unit_price?.toLocaleString()} VND</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.price_per_unit?.toLocaleString()} VND</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">{order.total_price?.toLocaleString()} VND</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {new Date(order.order_date).toLocaleDateString('vi-VN')}
