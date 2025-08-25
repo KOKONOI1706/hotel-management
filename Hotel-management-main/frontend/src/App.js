@@ -1413,10 +1413,38 @@ const Dashboard = ({ admin, onLogout }) => {
   const handleCreateOrder = async (e) => {
     e.preventDefault();
     try {
-      // Mock logic for creating order
-      const selectedDish = dishes.find(dish => dish.id === parseInt(orderForm.dish_id));
+      // Validation
+      if (!orderForm.company_name.trim()) {
+        alert("❌ Vui lòng nhập tên công ty!");
+        return;
+      }
+      
+      if (!orderForm.dish_id) {
+        alert("❌ Vui lòng chọn món ăn!");
+        return;
+      }
+      
+      if (dishes.length === 0) {
+        alert("❌ Danh sách món ăn chưa được tải!");
+        return;
+      }
+      
+      // Debug logging
+      console.log("Order form:", orderForm);
+      console.log("Available dishes:", dishes);
+      console.log("Looking for dish_id:", orderForm.dish_id);
+      
+      // Mock logic for creating order - try both string and number comparison
+      const selectedDish = dishes.find(dish => 
+        dish.id === orderForm.dish_id || 
+        dish.id === parseInt(orderForm.dish_id) ||
+        dish.id.toString() === orderForm.dish_id
+      );
+      
+      console.log("Selected dish:", selectedDish);
+      
       if (!selectedDish) {
-        alert("❌ Không tìm thấy món ăn!");
+        alert(`❌ Không tìm thấy món ăn! ID: ${orderForm.dish_id}\nDanh sách ID có sẵn: ${dishes.map(d => d.id).join(', ')}`);
         return;
       }
 
@@ -1443,6 +1471,7 @@ const Dashboard = ({ admin, onLogout }) => {
       alert(`✅ Đặt món thành công!\n🍽️ Món: ${selectedDish.name}\n🏢 Công ty: ${orderForm.company_name}\n📦 Số lượng: ${orderForm.quantity}\n💰 Tổng tiền: ${newOrder.total_price.toLocaleString()} VND`);
       
     } catch (error) {
+      console.error("Order creation error:", error);
       alert("❌ Lỗi khi đặt món: " + error.message);
     }
   };
